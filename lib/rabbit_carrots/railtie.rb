@@ -7,6 +7,7 @@ module RabbitCarrots
 
     rake_tasks do
       path = File.expand_path(__dir__)
+      debugger
       Dir.glob("#{path}/tasks/**/*.rake").each { |f| load f }
     end
   end
