@@ -7,12 +7,14 @@ module RabbitCarrots
   
     def initialize
       @connection = Bunny.new(
-        host: Configuration.rabbitmq_host,
-        port: Configuration.rabbitmq_port,
-        user: Configuration.rabbitmq_user,
-        password: Configuration.rabbitmq_password,
-        vhost: Configuration.rabbitmq_vhost
+        host: self.configuration.rabbitmq_host,
+        port: self.configuration.rabbitmq_port,
+        user: self.configuration.rabbitmq_user,
+        password: self.configuration.rabbitmq_password,
+        vhost: self.configuration.rabbitmq_vhost
       )
+
+      puts "Putting Config: #{self.configuration}"
       @connection.start
     end
   
