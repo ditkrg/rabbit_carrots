@@ -14,7 +14,6 @@ module RabbitCarrots
         vhost: RabbitCarrots.configuration.rabbitmq_vhost
       )
 
-      puts "Putting Config: #{RabbitCarrots.configuration.rabbitmq_host}"
       @connection.start
     end
   
