@@ -7,7 +7,7 @@ namespace :rmq do
 
     channels = RabbitCarrots.configuration.routing_key_mappings.map do |mapping|
       # This will be supplied in initializer. At that time, the Handler will not be available to be loaded and will throw Uninitialized Constant
-      { **mapping, handler_class: mapping[:handler_class].constantize }
+      { **mapping, handler: mapping[:handler].constantize }
     end
 
     Rails.logger = Logger.new($stdout)
