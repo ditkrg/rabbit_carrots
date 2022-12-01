@@ -43,7 +43,7 @@ end
 
 
 
-Then run ```bundle exec rake rmq:subscriber```.
+Then run ```bundle exec rake rabbit_carrots:eat```.
 
 ## Development
 
