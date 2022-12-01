@@ -43,6 +43,28 @@ end
 
 
 
+Note that handler is a class that must implement a method named ```handle!``` that takes 4 parameters as follow: 
+
+```ruby
+class DummyEventHandler
+   def self.handle!(channel, delivery_info, properties, payload)
+      # Handle the received message from the queue 
+   end
+end
+```
+
+
+
+Inside the handle message, you can NACK the message without re-queuing by raising ```RabbitCarrots::EventHandlers::Errors::NackMessage``` exception.
+
+To NACK and re-queue, raise ```RabbitCarrots::EventHandlers::Errors::NackAndRequeueMessage``` exception. 
+
+If no errors are thrown, the message will be acknowledged soon after the ```handle!``` method returns. 
+
+Note: Any other unrescued exception raised inside ```handle!``` the that is a subclass of ```StandardError``` will trigger a NACK and re-queue.
+
+### Running
+
 Then run ```bundle exec rake rabbit_carrots:eat```.
 
 ## Development
