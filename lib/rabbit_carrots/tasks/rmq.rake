@@ -5,7 +5,10 @@ namespace :rmq do
   task subscriber: :environment do
     Rails.application.eager_load!
 
-    channels = RabbitCarrots::Configuration.routing_key_mappings
+    channels = RabbitCarrots::Configuration.routing_key_mappings.map do |mapping|
+      # This will be supplied in initializer. At that time, the Handler will not be available to be loaded and will throw Uninitialized Constant
+      { **mapping, handler_class: mapping[:handler_class].constantize }
+    end
 
     Rails.logger = Logger.new($stdout)
 
