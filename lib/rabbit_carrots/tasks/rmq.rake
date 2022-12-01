@@ -29,7 +29,7 @@ namespace :rmq do
 end
 
 def run_task(queue_name:, handler_class:, routing_keys:)
-  RabbitConnection.instance.channel.with do |channel|
+  RabbitCarrots::Connection.instance.channel.with do |channel|
     exchange = channel.topic(RabbitCarrots.configuration.event_bus_exchange_name, durable: true)
 
     Rails.logger.info "Listening on QUEUE: #{queue_name} for ROUTING KEYS: #{routing_keys}"
