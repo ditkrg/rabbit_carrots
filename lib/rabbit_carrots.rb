@@ -8,5 +8,17 @@ require 'rabbit_carrots/railtie' if defined?(Rails)
 
 module RabbitCarrots
   class Error < StandardError; end
-  # Your code goes here...
+  module EventHandlers
+    module Errors
+      class IrrelevantMessage < StandardError
+      end
+  
+      class NackMessage < StandardError
+      end
+  
+      class NackAndRequeueMessage < StandardError
+      end
+    end
+  end
+  
 end

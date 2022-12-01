@@ -41,10 +41,10 @@ def run_task(queue_name:, handler_class:, routing_keys:)
       Rails.logger.info "Received from queue: #{queue_name}, Routing Keys: #{routing_keys}"
       handler_class.handle!(channel, delivery_info, properties, payload)
       channel.ack(delivery_info.delivery_tag, false)
-    rescue EventHandlers::Errors::NackMessage, JSON::ParserError => _e
+    rescue RabbitCarrots::EventHandlers::Errors::NackMessage, JSON::ParserError => _e
       Rails.logger.info "Nacked message: #{payload}"
       channel.nack(delivery_info.delivery_tag, false, false)
-    rescue EventHandlers::Errors::NackAndRequeueMessage => _e
+    rescue RabbitCarrots::EventHandlers::Errors::NackAndRequeueMessage => _e
       Rails.logger.info "Nacked and Requeued message: #{payload}"
       channel.nack(delivery_info.delivery_tag, false, true)
     rescue StandardError => e
