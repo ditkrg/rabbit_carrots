@@ -5,7 +5,7 @@ namespace :rmq do
   task subscriber: :environment do
     Rails.application.eager_load!
 
-    channels = RabbitCarrots::Configuration.routing_key_mappings.map do |mapping|
+    channels = RabbitCarrots.configuration.routing_key_mappings.map do |mapping|
       # This will be supplied in initializer. At that time, the Handler will not be available to be loaded and will throw Uninitialized Constant
       { **mapping, handler_class: mapping[:handler_class].constantize }
     end
@@ -30,7 +30,7 @@ end
 
 def run_task(queue_name:, handler_class:, routing_keys:)
   RabbitConnection.instance.channel.with do |channel|
-    exchange = channel.topic(RabbitCarrots::Configuration.event_bus_exchange_name, durable: true)
+    exchange = channel.topic(RabbitCarrots.configuration.event_bus_exchange_name, durable: true)
 
     Rails.logger.info "Listening on QUEUE: #{queue_name} for ROUTING KEYS: #{routing_keys}"
     queue = channel.queue(queue_name, durable: true)
