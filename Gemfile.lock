@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rabbit_carrots (0.1.12)
+    rabbit_carrots (0.1.13)
       bunny (>= 2.19.0)
       connection_pool (~> 2.3.0)
 
