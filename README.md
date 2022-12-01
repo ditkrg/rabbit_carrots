@@ -1,8 +1,15 @@
 # RabbitCarrots
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/rabbit_carrots`. To experiment with that code, run `bin/console` for an interactive prompt.
+RabbitCarrots is a simple background task based on rake to handle the consumption of RabbitMQ message in Rails applications. It is an opinionated library that solves the consumption of messages among  microservices, given the following conditions:
 
-TODO: Delete this and the text above, and describe your gem
+1. RabbitMQ is used as an event bus for communication.
+2. Messages are routed using a single exchange, multiple routing keys.
+3. One routing key or more can be bound to a single queue. 
+4. The app is a built with Ruby on Rails.
+
+### Considerations
+
+The gem adds a rake task to the project using the Railtie framework of Rails. Therefore, the task should be run as a separate process that is independent from the application server.
 
 ## Installation
 
@@ -16,7 +23,27 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
 ## Usage
 
-TODO: Write usage instructions here
+Add the following to ```config/initializers/rabbit_carrots.rb```:
+
+```ruby
+RabbitCarrots.configure do |c|
+  c.rabbitmq_host = ENV.fetch('RABBITMQ__HOST', nil)
+  c.rabbitmq_port = ENV.fetch('RABBITMQ__PORT', nil)
+  c.rabbitmq_user = ENV.fetch('RABBITMQ__USER', nil)
+  c.rabbitmq_password = ENV.fetch('RABBITMQ__PASSWORD', nil)
+  c.rabbitmq_vhost = ENV.fetch('RABBITMQ__VHOST', nil)
+  c.event_bus_exchange_name = ENV.fetch('EVENTBUS__EXCHANGE_NAME', nil)
+  c.routing_key_mappings =  [
+    { routing_keys: ['RK1', 'RK2'], queue: 'QUEUE_NAME', handler: 'CLASS HANDLER IN STRING' },
+    { routing_keys: ['RK1', 'RK2'], queue: 'QUEUE_NAME', handler: 'CLASS HANDLER IN STRING' }
+  ]
+end
+
+```
+
+
+
+Then run ```bundle exec rake rmq:subscriber```.
 
 ## Development
 
@@ -26,7 +53,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/rabbit_carrots. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/rabbit_carrots/blob/master/CODE_OF_CONDUCT.md).
+Bug reports and pull requests are welcome on GitHub at https://github.com/ditkrg/rabbit_carrots. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/rabbit_carrots/blob/master/CODE_OF_CONDUCT.md).
 
 ## License
 
