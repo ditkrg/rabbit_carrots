@@ -1,8 +1,8 @@
 require 'bunny'
 
-namespace :rmq do
+namespace :rabbit_carrots do
   desc 'Listener for Queue'
-  task subscriber: :environment do
+  task eat: :environment do
     Rails.application.eager_load!
 
     channels = RabbitCarrots.configuration.routing_key_mappings.map do |mapping|
