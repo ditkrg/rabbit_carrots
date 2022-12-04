@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rabbit_carrots (0.1.14)
+    rabbit_carrots (0.1.15)
       bunny (>= 2.19.0)
       connection_pool (~> 2.3.0)
 
@@ -66,4 +66,4 @@ DEPENDENCIES
   rubocop (~> 1.21)
 
 BUNDLED WITH
-   2.3.23
+   2.3.26
