@@ -10,7 +10,7 @@ namespace :rabbit_carrots do
       { **mapping, handler: mapping[:handler].constantize }
     end
 
-    Rails.logger = Logger.new($stdout)
+    Rails.logger = Logger.new(Rails.env.production? ? '/proc/self/fd/1' : $stdout)
 
     # Run RMQ Subscriber for each channel
     channels.each do |channel|
