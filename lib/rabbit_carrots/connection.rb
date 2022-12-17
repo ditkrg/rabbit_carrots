@@ -4,7 +4,7 @@ module RabbitCarrots
   class Connection
     include ::Singleton
     attr_reader :connection
-  
+
     def initialize
       @connection = Bunny.new(
         host: RabbitCarrots.configuration.rabbitmq_host,
@@ -16,11 +16,11 @@ module RabbitCarrots
 
       @connection.start
     end
-  
+
     def channel
       @channel ||= ConnectionPool.new do
         connection.create_channel
       end
     end
-  end  
+  end
 end
