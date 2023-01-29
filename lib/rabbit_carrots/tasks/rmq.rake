@@ -47,9 +47,18 @@ def run_task(queue_name:, handler_class:, routing_keys:)
     rescue RabbitCarrots::EventHandlers::Errors::NackAndRequeueMessage => _e
       Rails.logger.info "Nacked and Requeued message: #{payload}"
       channel.nack(delivery_info.delivery_tag, false, true)
+    # rescue all database errors
+    rescue ActiveRecord::Error => e
+      Rails.logger.error "Error handling message: #{payload}. Error: #{e.message}"
+      # delay for 3 seconds before requeuing
+      sleep 3
+      channel.nack(delivery_info.delivery_tag, false, true)
     rescue StandardError => e
       Rails.logger.error "Error handling message: #{payload}. Error: #{e.message}"
+      # requeue the message then kill the container
       channel.nack(delivery_info.delivery_tag, false, true)
+      # kill the container with sigterm
+      Process.kill('SIGTERM', Process.pid)
     end
 
     Rails.logger.info 'RUN TASK ENDED'
