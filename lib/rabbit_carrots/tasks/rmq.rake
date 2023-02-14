@@ -47,9 +47,23 @@ def run_task(queue_name:, handler_class:, routing_keys:)
     rescue RabbitCarrots::EventHandlers::Errors::NackAndRequeueMessage => _e
       Rails.logger.info "Nacked and Requeued message: #{payload}"
       channel.nack(delivery_info.delivery_tag, false, true)
+    rescue ActiveRecord::NotNullViolation, ActiveRecord::RecordInvalid => e
+      # on null constraint violation, we want to ack the message
+      Rails.logger.error "Null constraint or Invalid violation: #{payload}. Error: #{e.message}"
+      channel.ack(delivery_info.delivery_tag, false)
+    rescue ActiveRecord::ConnectionNotEstablished => e
+      # on connection not established, we want to requeue the message and sleep for 3 seconds
+      Rails.logger.error "Error connection not established to the database: #{payload}. Error: #{e.message}"
+      # delay for 3 seconds before requeuing
+      sleep 3
+      channel.nack(delivery_info.delivery_tag, false, true)
     rescue StandardError => e
       Rails.logger.error "Error handling message: #{payload}. Error: #{e.message}"
+      # requeue the message then kill the container
+      sleep 3
       channel.nack(delivery_info.delivery_tag, false, true)
+      # kill the container with sigterm
+      Process.kill('SIGTERM', Process.pid)
     end
 
     Rails.logger.info 'RUN TASK ENDED'
