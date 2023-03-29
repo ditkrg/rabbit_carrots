@@ -18,7 +18,7 @@ namespace :rabbit_carrots do
 
       raise "#{handler_class.name} must respond to `handle!`" unless handler_class.respond_to?(:handle!)
 
-      run_task(queue_name: channel[:queue], handler_class:, routing_keys: channel[:routing_keys])
+      run_task(queue_name: channel[:queue], handler_class:, routing_keys: channel[:routing_keys], queue_arguments: channel[:arguments])
     end
 
     # Infinite loop to keep the process running
@@ -28,12 +28,12 @@ namespace :rabbit_carrots do
   end
 end
 
-def run_task(queue_name:, handler_class:, routing_keys:)
+def run_task(queue_name:, queue_arguments: {}, handler_class:, routing_keys:)
   RabbitCarrots::Connection.instance.channel.with do |channel|
     exchange = channel.topic(RabbitCarrots.configuration.event_bus_exchange_name, durable: true)
 
     Rails.logger.info "Listening on QUEUE: #{queue_name} for ROUTING KEYS: #{routing_keys}"
-    queue = channel.queue(queue_name, durable: true)
+    queue = channel.queue(queue_name, durable: true, arguments: queue_arguments)
 
     routing_keys.map(&:strip).each { |k| queue.bind(exchange, routing_key: k) }
 
