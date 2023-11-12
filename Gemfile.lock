@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rabbit_carrots (0.1.17)
+    rabbit_carrots (0.1.19)
       bunny (>= 2.19.0)
       connection_pool (~> 2.3.0)
 
@@ -15,7 +15,7 @@ GEM
       tzinfo (~> 2.0)
     amq-protocol (2.3.2)
     ast (2.4.2)
-    bunny (2.20.3)
+    bunny (2.22.0)
       amq-protocol (~> 2.3, >= 2.3.1)
       sorted_set (~> 1, >= 1.0.2)
     concurrent-ruby (1.1.10)

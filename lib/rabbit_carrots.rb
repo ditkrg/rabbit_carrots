@@ -18,6 +18,8 @@ module RabbitCarrots
 
       class NackAndRequeueMessage < StandardError
       end
+
+      class PlaceholderError < Error; end
     end
   end
 end
