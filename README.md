@@ -32,7 +32,7 @@ RabbitCarrots.configure do |c|
   c.rabbitmq_user = ENV.fetch('RABBITMQ__USER', nil)
   c.rabbitmq_password = ENV.fetch('RABBITMQ__PASSWORD', nil)
   c.rabbitmq_vhost = ENV.fetch('RABBITMQ__VHOST', nil)
-  c.event_bus_exchange_name = ENV.fetch('EVENTBUS__EXCHANGE_NAME', nil)
+  c.rabbitmq_exchange_name = ENV.fetch('RABBITMQ__EXCHANGE_NAME', nil)
   c.routing_key_mappings =  [
     { routing_keys: ['RK1', 'RK2'], queue: 'QUEUE_NAME', handler: 'CLASS HANDLER IN STRING' },
     { routing_keys: ['RK1', 'RK2'], queue: 'QUEUE_NAME', handler: 'CLASS HANDLER IN STRING' }

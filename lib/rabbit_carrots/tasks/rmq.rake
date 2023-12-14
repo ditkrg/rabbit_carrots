@@ -5,10 +5,12 @@ namespace :rabbit_carrots do
   task eat: :environment do
     Rails.application.eager_load!
 
+    # rubocop:disable Lint/ConstantDefinitionInBlock
     DatabaseAgonsticNotNullViolation = defined?(ActiveRecord) ? ActiveRecord::NotNullViolation : RabbitCarrots::EventHandlers::Errors::PlaceholderError
     DatabaseAgonsticConnectionNotEstablished = defined?(ActiveRecord) ? ActiveRecord::ConnectionNotEstablished : Mongo::Error::SocketError
     DatabaseAgnosticRecordInvalid = defined?(ActiveRecord) ? ActiveRecord::RecordInvalid : Mongoid::Errors::Validations
-    
+    # rubocop:enable Lint/ConstantDefinitionInBlock
+
     channels = RabbitCarrots.configuration.routing_key_mappings.map do |mapping|
       # This will be supplied in initializer. At that time, the Handler will not be available to be loaded and will throw Uninitialized Constant
       { **mapping, handler: mapping[:handler].constantize }
@@ -32,9 +34,9 @@ namespace :rabbit_carrots do
   end
 end
 
-def run_task(queue_name:, queue_arguments: {}, handler_class:, routing_keys:)
+def run_task(queue_name:, handler_class:, routing_keys:, queue_arguments: {})
   RabbitCarrots::Connection.instance.channel.with do |channel|
-    exchange = channel.topic(RabbitCarrots.configuration.event_bus_exchange_name, durable: true)
+    exchange = channel.topic(RabbitCarrots.configuration.rabbitmq_exchange_name, durable: true)
 
     Rails.logger.info "Listening on QUEUE: #{queue_name} for ROUTING KEYS: #{routing_keys}"
     queue = channel.queue(queue_name, durable: true, arguments: queue_arguments)
