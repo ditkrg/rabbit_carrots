@@ -53,7 +53,7 @@ module RabbitCarrots
     def request_shutdown
       # Workaround to a known issue with Signal Traps and logs
       Thread.start do
-        logger.info 'Shutting down Rabbit Carrots service...'
+        logger.log 'Shutting down Rabbit Carrots service...'
       end
       @shutdown_requested = true
       @threads.each(&:kill)
@@ -63,7 +63,7 @@ module RabbitCarrots
     def stop
       # Workaround to a known issue with Signal Traps and logs
       Thread.start do
-        logger.info 'Stoppig the Rabbit Carrots service...'
+        logger.log 'Stoppig the Rabbit Carrots service...'
       end
       @running = false
     end
@@ -72,7 +72,7 @@ module RabbitCarrots
       RabbitCarrots::Connection.instance.channel.with do |channel|
         exchange = channel.topic(RabbitCarrots.configuration.rabbitmq_exchange_name, durable: true)
 
-        logger.info "Listening on QUEUE: #{queue_name} for ROUTING KEYS: #{routing_keys}"
+        logger.log "Listening on QUEUE: #{queue_name} for ROUTING KEYS: #{routing_keys}"
         queue = channel.queue(queue_name, durable: true, arguments: queue_arguments)
 
         routing_keys.map(&:strip).each { |k| queue.bind(exchange, routing_key: k) }
@@ -80,30 +80,30 @@ module RabbitCarrots
         queue.subscribe(block: false, manual_ack: true, prefetch: 10) do |delivery_info, properties, payload|
           break if @shutdown_requested
 
-          logger.info "Received from queue: #{queue_name}, Routing Keys: #{routing_keys}"
+          logger.log "Received from queue: #{queue_name}, Routing Keys: #{routing_keys}"
           handler_class.handle!(channel, delivery_info, properties, payload)
           channel.ack(delivery_info.delivery_tag, false)
         rescue RabbitCarrots::EventHandlers::Errors::NackMessage, JSON::ParserError => _e
-          logger.info "Nacked message: #{payload}"
+          logger.log "Nacked message: #{payload}"
           channel.nack(delivery_info.delivery_tag, false, false)
         rescue RabbitCarrots::EventHandlers::Errors::NackAndRequeueMessage => _e
-          logger.info "Nacked and Requeued message: #{payload}"
+          logger.log "Nacked and Requeued message: #{payload}"
           channel.nack(delivery_info.delivery_tag, false, true)
         rescue DatabaseAgonsticNotNullViolation, DatabaseAgnosticRecordInvalid => e
-          logger.info "Null constraint or Invalid violation: #{payload}. Error: #{e.message}"
+          logger.log "Null constraint or Invalid violation: #{payload}. Error: #{e.message}"
           channel.ack(delivery_info.delivery_tag, false)
         rescue DatabaseAgonsticConnectionNotEstablished => e
-          logger.info "Error connection not established to the database: #{payload}. Error: #{e.message}"
+          logger.log "Error connection not established to the database: #{payload}. Error: #{e.message}"
           sleep 3
           channel.nack(delivery_info.delivery_tag, false, true)
         rescue StandardError => e
-          logger.info "Error handling message: #{payload}. Error: #{e.message}"
+          logger.log "Error handling message: #{payload}. Error: #{e.message}"
           sleep 3
           channel.nack(delivery_info.delivery_tag, false, true)
           Process.kill('SIGTERM', Process.pid) if kill_to_restart_on_standard_error
         end
 
-        logger.info "Ending task for queue: #{queue_name}"
+        logger.log "Ending task for queue: #{queue_name}"
       end
     rescue StandardError => e
       logger.error "Bunny session error: #{e.message}"
