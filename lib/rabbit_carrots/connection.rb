@@ -11,7 +11,11 @@ module RabbitCarrots
         port: RabbitCarrots.configuration.rabbitmq_port,
         user: RabbitCarrots.configuration.rabbitmq_user,
         password: RabbitCarrots.configuration.rabbitmq_password,
-        vhost: RabbitCarrots.configuration.rabbitmq_vhost
+        vhost: RabbitCarrots.configuration.rabbitmq_vhost,
+        automatically_recover: RabbitCarrots.configuration.automatically_recover || true,
+        network_recovery_interval: RabbitCarrots.configuration.network_recovery_interval || 5,
+        recovery_attempts: RabbitCarrots.configuration.recovery_attempts || 5,
+        recovery_attempts_exhausted: -> { Process.kill('TERM', Process.pid) }
       )
 
       @connection.start
