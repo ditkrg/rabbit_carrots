@@ -1,6 +1,7 @@
 # rabbit_carrots.rb
 
 require 'puma/plugin'
+require 'rabbit_carrots'
 
 Puma::Plugin.create do
   attr_reader :puma_pid, :rabbit_carrots_pid, :log_writer, :core_service

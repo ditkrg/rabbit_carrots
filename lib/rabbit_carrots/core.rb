@@ -2,9 +2,13 @@ module RabbitCarrots
   class Core
     attr_reader :logger
 
-    DatabaseAgonsticNotNullViolation = defined?(ActiveRecord) ? ActiveRecord::NotNullViolation : RabbitCarrots::EventHandlers::Errors::PlaceholderError
-    DatabaseAgonsticConnectionNotEstablished = defined?(ActiveRecord) ? ActiveRecord::ConnectionNotEstablished : Mongo::Error::SocketError
-    DatabaseAgnosticRecordInvalid = defined?(ActiveRecord) ? ActiveRecord::RecordInvalid : Mongoid::Errors::Validations
+    @database_agnostic_not_null_violation = nil
+    @database_agnostic_connection_not_established = nil
+    @database_agnostic_record_invalid = nil
+
+    class << self
+      attr_accessor :database_agnostic_not_null_violation, :database_agnostic_connection_not_established, :database_agnostic_record_invalid
+    end
 
     def initialize(logger: nil)
       @logger = logger || Logger.new(Rails.env.production? ? '/proc/self/fd/1' : $stdout)
@@ -14,6 +18,10 @@ module RabbitCarrots
     end
 
     def start(kill_to_restart_on_standard_error: false)
+      self.class.database_agnostic_not_null_violation = RabbitCarrots.configuration.orm == :activerecord ? ActiveRecord::NotNullViolation : RabbitCarrots::EventHandlers::Errors::PlaceholderError
+      self.class.database_agnostic_connection_not_established = RabbitCarrots.configuration.orm == :activerecord ? ActiveRecord::ConnectionNotEstablished : ::Mongo::Error::SocketError
+      self.class.database_agnostic_record_invalid = RabbitCarrots.configuration.orm == :activerecord ? ActiveRecord::RecordInvalid : ::Mongoid::Errors::Validations
+
       channels = RabbitCarrots.configuration.routing_key_mappings.map do |mapping|
         { **mapping, handler: mapping[:handler].constantize }
       end
@@ -89,10 +97,10 @@ module RabbitCarrots
         rescue RabbitCarrots::EventHandlers::Errors::NackAndRequeueMessage => _e
           logger.log "Nacked and Requeued message: #{payload}"
           channel.nack(delivery_info.delivery_tag, false, true)
-        rescue DatabaseAgonsticNotNullViolation, DatabaseAgnosticRecordInvalid => e
+        rescue self.class.database_agnostic_not_null_violation, self.class.database_agnostic_record_invalid => e
           logger.log "Null constraint or Invalid violation: #{payload}. Error: #{e.message}"
           channel.ack(delivery_info.delivery_tag, false)
-        rescue DatabaseAgonsticConnectionNotEstablished => e
+        rescue self.class.database_agnostic_connection_not_established => e
           logger.log "Error connection not established to the database: #{payload}. Error: #{e.message}"
           sleep 3
           channel.nack(delivery_info.delivery_tag, false, true)
@@ -102,8 +110,6 @@ module RabbitCarrots
           channel.nack(delivery_info.delivery_tag, false, true)
           Process.kill('SIGTERM', Process.pid) if kill_to_restart_on_standard_error
         end
-
-        logger.log "Ending task for queue: #{queue_name}"
       end
     rescue StandardError => e
       logger.error "Bunny session error: #{e.message}"

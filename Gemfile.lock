@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rabbit_carrots (0.1.20)
+    rabbit_carrots (1.0.2)
       bunny (>= 2.22)
       connection_pool (~> 2.4)
 
@@ -80,7 +80,7 @@ GEM
       rubocop-ast (>= 1.30.0, < 2.0)
     ruby-progressbar (1.13.0)
     ruby2_keywords (0.0.5)
-    set (1.0.3)
+    set (1.1.0)
     sorted_set (1.0.3)
       rbtree
       set (~> 1.0)
