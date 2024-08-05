@@ -36,6 +36,7 @@ RabbitCarrots.configure do |c|
   c.automatically_recover = true
   c.network_recovery_interval = 5
   c.recovery_attempts = 5
+  c.orm = :activerecord || :mongoid
   c.routing_key_mappings =  [
     { routing_keys: ['RK1', 'RK2'], queue: 'QUEUE_NAME', handler: 'CLASS HANDLER IN STRING' },
     { routing_keys: ['RK1', 'RK2'], queue: 'QUEUE_NAME', handler: 'CLASS HANDLER IN STRING' }
