@@ -1,6 +1,6 @@
 # RabbitCarrots
 
-RabbitCarrots is a simple background task based on rake to handle the consumption of RabbitMQ message in Rails applications. It is an opinionated library that solves the consumption of messages among  microservices, given the following conditions:
+RabbitCarrots is a simple background worker to handle the consumption of RabbitMQ message in Rails applications. It is an opinionated library that solves the consumption of messages among  microservices, given the following conditions:
 
 1. RabbitMQ is used as an event bus for communication.
 2. Messages are routed using a single exchange, multiple routing keys.
