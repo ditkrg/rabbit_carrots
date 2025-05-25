@@ -11,7 +11,7 @@ module RabbitCarrots
     end
 
     def initialize(logger: nil)
-      @logger = logger || Logger.new(Rails.env.production? ? '/proc/self/fd/1' : $stdout)
+      @logger = create_logger_adapter(logger || Logger.new(Rails.env.production? ? '/proc/self/fd/1' : $stdout))
       @threads = []
       @running = true
       @shutdown_requested = false
@@ -114,6 +114,25 @@ module RabbitCarrots
     rescue StandardError => e
       logger.error "Bunny session error: #{e.message}"
       request_shutdown
+    end
+
+    private
+
+    def create_logger_adapter(logger)
+      return logger if logger.respond_to?(:info) && logger.respond_to?(:error) && logger.respond_to?(:warn)
+
+      adapter = Object.new
+      def adapter.info(msg)
+        @logger.write("[INFO] #{msg}\n")
+      end
+      def adapter.error(msg)
+        @logger.write("[ERROR] #{msg}\n")
+      end
+      def adapter.warn(msg)
+        @logger.write("[WARN] #{msg}\n")
+      end
+      adapter.instance_variable_set(:@logger, logger)
+      adapter
     end
   end
 end
