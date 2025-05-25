@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rabbit_carrots (1.0.2)
+    rabbit_carrots (1.0.3)
       bunny (>= 2.22)
       connection_pool (~> 2.4)
 
@@ -18,12 +18,12 @@ GEM
       minitest (>= 5.1)
       mutex_m
       tzinfo (~> 2.0)
-    amq-protocol (2.3.2)
+    amq-protocol (2.3.4)
     ast (2.4.2)
     base64 (0.2.0)
     bigdecimal (3.1.4)
-    bunny (2.22.0)
-      amq-protocol (~> 2.3, >= 2.3.1)
+    bunny (2.24.0)
+      amq-protocol (~> 2.3)
       sorted_set (~> 1, >= 1.0.2)
     concurrent-ruby (1.2.2)
     connection_pool (2.4.1)
@@ -80,7 +80,7 @@ GEM
       rubocop-ast (>= 1.30.0, < 2.0)
     ruby-progressbar (1.13.0)
     ruby2_keywords (0.0.5)
-    set (1.1.0)
+    set (1.1.2)
     sorted_set (1.0.3)
       rbtree
       set (~> 1.0)

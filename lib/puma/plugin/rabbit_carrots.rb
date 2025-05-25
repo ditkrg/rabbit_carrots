@@ -8,7 +8,7 @@ Puma::Plugin.create do
 
   def start(launcher)
     @log_writer = launcher.log_writer
-    @puma_pid = $$
+    @puma_pid = $PROCESS_ID
 
     @core_service = RabbitCarrots::Core.new(logger: log_writer)
 
@@ -43,6 +43,7 @@ Puma::Plugin.create do
     Process.kill('TERM', rabbit_carrots_pid)
     Process.wait(rabbit_carrots_pid)
   rescue Errno::ECHILD, Errno::ESRCH
+    log 'Rabbit Carrots already stopped'
   end
 
   def monitor_puma
@@ -57,7 +58,7 @@ Puma::Plugin.create do
     loop do
       if send(process_dead)
         log message
-        Process.kill('TERM', $$)
+        Process.kill('TERM', $PROCESS_ID)
         break
       end
       sleep 2

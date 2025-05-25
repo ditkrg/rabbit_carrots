@@ -11,7 +11,7 @@ module RabbitCarrots
     end
 
     def initialize(logger: nil)
-      @logger = logger || Logger.new(Rails.env.production? ? '/proc/self/fd/1' : $stdout)
+      @logger = create_logger_adapter(logger || Logger.new(Rails.env.production? ? '/proc/self/fd/1' : $stdout))
       @threads = []
       @running = true
       @shutdown_requested = false
@@ -61,7 +61,7 @@ module RabbitCarrots
     def request_shutdown
       # Workaround to a known issue with Signal Traps and logs
       Thread.start do
-        logger.log 'Shutting down Rabbit Carrots service...'
+        logger.error 'Shutting down Rabbit Carrots service...'
       end
       @shutdown_requested = true
       @threads.each(&:kill)
@@ -71,7 +71,7 @@ module RabbitCarrots
     def stop
       # Workaround to a known issue with Signal Traps and logs
       Thread.start do
-        logger.log 'Stoppig the Rabbit Carrots service...'
+        logger.error 'Stoppig the Rabbit Carrots service...'
       end
       @running = false
     end
@@ -80,7 +80,7 @@ module RabbitCarrots
       RabbitCarrots::Connection.instance.channel.with do |channel|
         exchange = channel.topic(RabbitCarrots.configuration.rabbitmq_exchange_name, durable: true)
 
-        logger.log "Listening on QUEUE: #{queue_name} for ROUTING KEYS: #{routing_keys}"
+        logger.info "Listening on QUEUE: #{queue_name} for ROUTING KEYS: #{routing_keys}"
         queue = channel.queue(queue_name, durable: true, arguments: queue_arguments)
 
         routing_keys.map(&:strip).each { |k| queue.bind(exchange, routing_key: k) }
@@ -88,24 +88,24 @@ module RabbitCarrots
         queue.subscribe(block: false, manual_ack: true, prefetch: 10) do |delivery_info, properties, payload|
           break if @shutdown_requested
 
-          logger.log "Received from queue: #{queue_name}, Routing Keys: #{routing_keys}"
+          logger.info "Received from queue: #{queue_name}, Routing Keys: #{routing_keys}"
           handler_class.handle!(channel, delivery_info, properties, payload)
           channel.ack(delivery_info.delivery_tag, false)
         rescue RabbitCarrots::EventHandlers::Errors::NackMessage, JSON::ParserError => _e
-          logger.log "Nacked message: #{payload}"
+          logger.warn "Nacked message: #{payload}"
           channel.nack(delivery_info.delivery_tag, false, false)
         rescue RabbitCarrots::EventHandlers::Errors::NackAndRequeueMessage => _e
-          logger.log "Nacked and Requeued message: #{payload}"
+          logger.warn "Nacked and Requeued message: #{payload}"
           channel.nack(delivery_info.delivery_tag, false, true)
         rescue self.class.database_agnostic_not_null_violation, self.class.database_agnostic_record_invalid => e
-          logger.log "Null constraint or Invalid violation: #{payload}. Error: #{e.message}"
+          logger.warn "Null constraint or Invalid violation: #{payload}. Error: #{e.message}"
           channel.ack(delivery_info.delivery_tag, false)
         rescue self.class.database_agnostic_connection_not_established => e
-          logger.log "Error connection not established to the database: #{payload}. Error: #{e.message}"
+          logger.warn "Error connection not established to the database: #{payload}. Error: #{e.message}"
           sleep 3
           channel.nack(delivery_info.delivery_tag, false, true)
         rescue StandardError => e
-          logger.log "Error handling message: #{payload}. Error: #{e.message}"
+          logger.error "Error handling message: #{payload}. Error: #{e.message}"
           sleep 3
           channel.nack(delivery_info.delivery_tag, false, true)
           Process.kill('SIGTERM', Process.pid) if kill_to_restart_on_standard_error
@@ -114,6 +114,25 @@ module RabbitCarrots
     rescue StandardError => e
       logger.error "Bunny session error: #{e.message}"
       request_shutdown
+    end
+
+    private
+
+    def create_logger_adapter(logger)
+      return logger if logger.respond_to?(:info) && logger.respond_to?(:error) && logger.respond_to?(:warn)
+
+      adapter = Object.new
+      def adapter.info(msg)
+        @logger.write("[INFO] #{msg}\n")
+      end
+      def adapter.error(msg)
+        @logger.write("[ERROR] #{msg}\n")
+      end
+      def adapter.warn(msg)
+        @logger.write("[WARN] #{msg}\n")
+      end
+      adapter.instance_variable_set(:@logger, logger)
+      adapter
     end
   end
 end

@@ -18,8 +18,8 @@ module RabbitCarrots
                   :rabbitmq_exchange_name,
                   :automatically_recover,
                   :network_recovery_interval,
-                  :recovery_attempts,
-                  :orm
+                  :recovery_attempts
+
     def orm
       @orm ||= :activerecord
     end
