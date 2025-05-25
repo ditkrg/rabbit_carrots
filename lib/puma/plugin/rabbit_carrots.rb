@@ -1,5 +1,4 @@
 # rabbit_carrots.rb
-
 require 'puma/plugin'
 require 'rabbit_carrots'
 
@@ -8,7 +7,7 @@ Puma::Plugin.create do
 
   def start(launcher)
     @log_writer = launcher.log_writer
-    @puma_pid = $PROCESS_ID
+    @puma_pid = $$
 
     @core_service = RabbitCarrots::Core.new(logger: log_writer)
 
@@ -58,7 +57,7 @@ Puma::Plugin.create do
     loop do
       if send(process_dead)
         log message
-        Process.kill('TERM', $PROCESS_ID)
+        Process.kill('TERM', $$)
         break
       end
       sleep 2
