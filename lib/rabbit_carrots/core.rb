@@ -125,12 +125,15 @@ module RabbitCarrots
       def adapter.info(msg)
         @logger.write("[INFO] #{msg}\n")
       end
+
       def adapter.error(msg)
         @logger.write("[ERROR] #{msg}\n")
       end
+
       def adapter.warn(msg)
         @logger.write("[WARN] #{msg}\n")
       end
+
       adapter.instance_variable_set(:@logger, logger)
       adapter
     end
