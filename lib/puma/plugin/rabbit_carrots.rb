@@ -1,5 +1,5 @@
 # rabbit_carrots.rb
-
+require 'English'
 require 'puma/plugin'
 require 'rabbit_carrots'
 
