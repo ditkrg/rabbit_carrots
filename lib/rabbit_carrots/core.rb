@@ -36,6 +36,7 @@ module RabbitCarrots
             handler_class:,
             routing_keys: channel[:routing_keys],
             queue_arguments: channel[:arguments],
+            exchange_name: channel[:exchange_name],
             kill_to_restart_on_standard_error:
           )
         end
@@ -76,9 +77,9 @@ module RabbitCarrots
       @running = false
     end
 
-    def run_task(queue_name:, handler_class:, routing_keys:, queue_arguments: {}, kill_to_restart_on_standard_error: false)
+    def run_task(queue_name:, handler_class:, routing_keys:, queue_arguments: {}, exchange_name: nil, kill_to_restart_on_standard_error: false)
       RabbitCarrots::Connection.instance.channel.with do |channel|
-        exchange = channel.topic(RabbitCarrots.configuration.rabbitmq_exchange_name, durable: true)
+        exchange = channel.topic(exchange_name || RabbitCarrots.configuration.rabbitmq_exchange_name, durable: true)
 
         logger.info "Listening on QUEUE: #{queue_name} for ROUTING KEYS: #{routing_keys}"
         queue = channel.queue(queue_name, durable: true, arguments: queue_arguments)
