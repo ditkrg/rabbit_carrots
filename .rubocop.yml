@@ -5,7 +5,7 @@ AllCops:
   SuggestExtensions: false
 Layout/SpaceBeforeBrackets: # (new in 1.7)
   Enabled: true
-Layout/LineLength: 
+Layout/LineLength:
   Max: 350
 Lint/AmbiguousAssignment: # (new in 1.7)
   Enabled: true
@@ -111,3 +111,7 @@ Metrics/CyclomaticComplexity:
   Max: 15
 Metrics/PerceivedComplexity:
   Max: 15
+Metrics/ClassLength:
+  Max: 150
+Metrics/ParameterLists:
+  Max: 6
