@@ -93,19 +93,24 @@ module RabbitCarrots
           handler_class.handle!(channel, delivery_info, properties, payload)
           channel.ack(delivery_info.delivery_tag, false)
         rescue RabbitCarrots::EventHandlers::Errors::NackMessage, JSON::ParserError => _e
+          payload = encode_payload(payload)
           logger.warn "Nacked message: #{payload}"
           channel.nack(delivery_info.delivery_tag, false, false)
         rescue RabbitCarrots::EventHandlers::Errors::NackAndRequeueMessage => _e
+          payload = encode_payload(payload)
           logger.warn "Nacked and Requeued message: #{payload}"
           channel.nack(delivery_info.delivery_tag, false, true)
         rescue self.class.database_agnostic_not_null_violation, self.class.database_agnostic_record_invalid => e
+          payload = encode_payload(payload)
           logger.warn "Null constraint or Invalid violation: #{payload}. Error: #{e.message}"
           channel.ack(delivery_info.delivery_tag, false)
         rescue self.class.database_agnostic_connection_not_established => e
+          payload = encode_payload(payload)
           logger.warn "Error connection not established to the database: #{payload}. Error: #{e.message}"
           sleep 3
           channel.nack(delivery_info.delivery_tag, false, true)
         rescue StandardError => e
+          payload = encode_payload(payload)
           logger.error "Error handling message: #{payload}. Error: #{e.message}"
           sleep 3
           channel.nack(delivery_info.delivery_tag, false, true)
@@ -137,6 +142,15 @@ module RabbitCarrots
 
       adapter.instance_variable_set(:@logger, logger)
       adapter
+    end
+
+    def encode_payload(payload)
+      payload.encode(
+        'UTF-8',
+        invalid: :replace,
+        undef: :replace,
+        replace: ''
+      )
     end
   end
 end
