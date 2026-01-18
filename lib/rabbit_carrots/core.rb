@@ -79,7 +79,15 @@ module RabbitCarrots
 
     def run_task(queue_name:, handler_class:, routing_keys:, queue_arguments: {}, exchange_name: nil, kill_to_restart_on_standard_error: false)
       RabbitCarrots::Connection.instance.channel.with do |channel|
-        exchange = channel.topic(exchange_name || RabbitCarrots.configuration.rabbitmq_exchange_name, durable: true)
+        exchange_name ||= RabbitCarrots.configuration.rabbitmq_exchange_name
+
+        begin
+          # Try to passively read an existing exchange without declaring it
+          exchange = channel.topic(exchange_name, passive: true)
+        rescue Bunny::NotFound
+          # If the exchange does not exist, declare it
+          exchange = channel.topic(exchange_name, durable: true)
+        end
 
         logger.info "Listening on QUEUE: #{queue_name} for ROUTING KEYS: #{routing_keys}"
         queue = channel.queue(queue_name, durable: true, arguments: queue_arguments)
