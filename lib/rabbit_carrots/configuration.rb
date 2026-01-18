@@ -24,8 +24,6 @@ module RabbitCarrots
       @orm ||= :activerecord
     end
 
-    def orm=(value)
-      @orm = value
-    end
+    attr_writer :orm
   end
 end

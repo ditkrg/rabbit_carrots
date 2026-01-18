@@ -1,11 +1,12 @@
-require: rubocop-rails
+plugins:
+  - rubocop-rails
 
 AllCops:
   NewCops: enable
   SuggestExtensions: false
 Layout/SpaceBeforeBrackets: # (new in 1.7)
   Enabled: true
-Layout/LineLength: 
+Layout/LineLength:
   Max: 350
 Lint/AmbiguousAssignment: # (new in 1.7)
   Enabled: true

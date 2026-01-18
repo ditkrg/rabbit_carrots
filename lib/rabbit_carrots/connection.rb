@@ -3,6 +3,7 @@ require 'singleton'
 module RabbitCarrots
   class Connection
     include ::Singleton
+
     attr_reader :connection
 
     def initialize

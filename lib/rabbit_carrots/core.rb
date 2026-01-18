@@ -1,5 +1,5 @@
 module RabbitCarrots
-  class Core
+  class Core # rubocop:disable Metrics/ClassLength
     attr_reader :logger
 
     @database_agnostic_not_null_violation = nil
