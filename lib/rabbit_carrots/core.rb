@@ -77,7 +77,7 @@ module RabbitCarrots
       @running = false
     end
 
-    def run_task(queue_name:, handler_class:, routing_keys:, queue_arguments: {}, kill_to_restart_on_standard_error: false)
+    def run_task(queue_name:, handler_class:, routing_keys:, queue_arguments: {}, exchange_name: nil, kill_to_restart_on_standard_error: false)
       RabbitCarrots::Connection.instance.channel.with do |channel|
         exchange = channel.topic(exchange_name || RabbitCarrots.configuration.rabbitmq_exchange_name, durable: true)
 
