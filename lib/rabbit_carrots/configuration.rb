@@ -23,5 +23,9 @@ module RabbitCarrots
     def orm
       @orm ||= :activerecord
     end
+
+    def orm=(value)
+      @orm = value
+    end
   end
 end
