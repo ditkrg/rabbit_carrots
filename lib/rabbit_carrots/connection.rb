@@ -27,5 +27,17 @@ module RabbitCarrots
         connection.create_channel
       end
     end
+
+    # Consumers get a channel of their own rather than one from the pool. A
+    # pooled channel is returned as soon as `subscribe` returns, so several
+    # consumers end up sharing one channel, which means they share a prefetch,
+    # a work pool, and the fate of that channel when it errors.
+    def create_channel(...)
+      connection.create_channel(...)
+    end
+
+    def open?
+      !connection.nil? && connection.open?
+    end
   end
 end

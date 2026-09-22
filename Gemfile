@@ -5,10 +5,10 @@ source 'https://rubygems.org'
 # Specify your gem's dependencies in rabbit_carrots.gemspec
 gemspec
 
-gem 'rake', '~> 13.3.1'
+gem 'rake', '~> 13.4.2'
 
 gem 'rspec', '~> 3.13.2'
 
-gem 'rubocop', '~> 1.82.1'
+gem 'rubocop', '~> 1.91.0'
 
-gem 'rubocop-rails', '~> 2.34.3'
+gem 'rubocop-rails', '~> 2.38.0'

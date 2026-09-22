@@ -30,9 +30,14 @@ Puma::Plugin.create do
   private
 
   def start_rabbit_carrots_consumer
-    core_service.start(kill_to_restart_on_standard_error: true)
+    healthy = core_service.start(kill_to_restart_on_standard_error: true)
+
+    # Exits the forked child, not the Rails process, so that
+    # monitor_rabbit_carrots notices and brings Puma down with it.
+    exit(1) unless healthy # rubocop:disable Rails/Exit
   rescue StandardError => e
     Rails.logger.error "Error starting Rabbit Carrots: #{e.message}"
+    exit(1) # rubocop:disable Rails/Exit
   end
 
   def stop_rabbit_carrots

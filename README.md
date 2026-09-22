@@ -33,9 +33,14 @@ RabbitCarrots.configure do |c|
   c.rabbitmq_password = ENV.fetch('RABBITMQ__PASSWORD', nil)
   c.rabbitmq_vhost = ENV.fetch('RABBITMQ__VHOST', nil)
   c.rabbitmq_exchange_name = ENV.fetch('RABBITMQ__EXCHANGE_NAME', nil)
+  c.rabbitmq_exchange_durable = true # must match the exchange on the broker
   c.automatically_recover = true
   c.network_recovery_interval = 5
   c.recovery_attempts = 5
+  c.prefetch = 10
+  c.supervision_interval = 5
+  c.startup_grace = 60
+  c.unhealthy_grace = 60
   c.orm = :activerecord || :mongoid
   c.routing_key_mappings =  [
     { routing_keys: ['RK1', 'RK2'], queue: 'QUEUE_NAME', handler: 'CLASS HANDLER IN STRING' },
@@ -62,6 +67,38 @@ To NACK and re-queue, raise ```RabbitCarrots::EventHandlers::Errors::NackAndRequ
 If no errors are thrown, the message will be acknowledged soon after the ```handle!``` method returns. 
 
 Note: Any other unrescued exception raised inside ```handle!``` the that is a subclass of ```StandardError``` will trigger a NACK and re-queue.
+
+### Exchange durability
+
+`rabbitmq_exchange_durable` has to match the exchange as it exists on the
+broker. It defaults to `true`, which is what a shared event bus exchange
+normally is.
+
+This is not cosmetic. Bunny records how an entity was declared and replays that
+declaration during automatic topology recovery, and topology recovery is not
+configurable. Declare a durable exchange as non-durable and every reconnect —
+a node put into maintenance, a failover, a brief network blip — is answered with
+`PRECONDITION_FAILED - inequivalent arg 'durable'`, which closes the channel and
+takes every consumer on it with it. The process stays up and stops consuming.
+
+If the durability is wrong, the service now says so and refuses to start rather
+than consuming from a channel that will not survive its first reconnect.
+
+### Health and restarts
+
+A consumer subscribes and then does its work on Bunny's own threads, so the
+process staying alive says nothing about whether it is still consuming. The
+supervisor checks every `supervision_interval` seconds that the connection is
+open, every consumer is still registered, and every channel is still alive.
+
+A reconnect in progress is indistinguishable from a dead consumer, so the
+service is only declared dead after `unhealthy_grace` seconds without
+consuming. It then shuts down and **exits non-zero**, so that Kubernetes, Puma
+or systemd restarts it. Make sure whatever supervises the process actually
+restarts it on failure.
+
+`Core#start` returns `true` when it shut down because it was asked to, and
+`false` when it died.
 
 ### Running
 

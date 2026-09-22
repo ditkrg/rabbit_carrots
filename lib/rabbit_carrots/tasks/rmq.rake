@@ -8,6 +8,9 @@ namespace :rabbit_carrots do
 
     core_service = RabbitCarrots::Core.new(logger:)
 
-    core_service.start(kill_to_restart_on_standard_error: true)
+    healthy = core_service.start(kill_to_restart_on_standard_error: true)
+
+    # Exit non-zero so that whatever supervises the process restarts it.
+    exit(1) unless healthy
   end
 end
