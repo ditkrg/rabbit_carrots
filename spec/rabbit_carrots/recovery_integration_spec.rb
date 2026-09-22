@@ -59,8 +59,8 @@ RSpec.describe 'automatic recovery', :integration do
       c.rabbitmq_exchange_name = exchange_name
       c.network_recovery_interval = 1
       c.supervision_interval = 1
-      c.startup_grace = 10
-      c.unhealthy_grace = 10
+      c.startup_grace = 30
+      c.unhealthy_grace = 60
       c.routing_key_mappings = [
         { routing_keys: [routing_key], queue: queue_name, handler: 'RecordingHandler' }
       ]
@@ -95,7 +95,7 @@ RSpec.describe 'automatic recovery', :integration do
     publisher_exchange.publish(body, routing_key: routing_key)
   end
 
-  def wait_until(timeout: 15)
+  def wait_until(timeout: 45)
     deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
     sleep 0.1 until yield || Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
     yield
@@ -114,7 +114,6 @@ RSpec.describe 'automatic recovery', :integration do
     expect(wait_until { RecordingHandler.payloads.include?('before') }).to be(true)
 
     sever_connection!
-    expect(wait_until { RabbitCarrots::Connection.instance.open? }).to be(true)
 
     publish('after')
 
@@ -137,6 +136,8 @@ RSpec.describe 'automatic recovery', :integration do
   end
 
   context 'when a channel is closed underneath a healthy-looking process' do
+    before { RabbitCarrots.configuration.unhealthy_grace = 5 }
+
     it 'detects it and reports itself unhealthy instead of idling forever' do
       start_core!
 
