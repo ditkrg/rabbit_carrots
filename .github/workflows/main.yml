@@ -10,15 +10,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Ruby ${{ matrix.ruby }} / bunny ${{ matrix.bunny }}
+    name: Ruby ${{ matrix.ruby }}
     strategy:
       fail-fast: false
       matrix:
         ruby:
           - "4.0.6"
-        bunny:
-          - "3.1.0"
-          - "latest"
 
     services:
       rabbitmq:
@@ -34,18 +31,13 @@ jobs:
     env:
       RABBITMQ__HOST: localhost
       RABBITMQ__PORT: 5672
-      BUNDLE_FROZEN: "false"
 
     steps:
       - uses: actions/checkout@v4
-      - name: Pin bunny
-        if: matrix.bunny != 'latest'
-        run: echo "gem 'bunny', '${{ matrix.bunny }}'" >> Gemfile
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-          cache-version: ${{ matrix.bunny }}
       - name: Run the default task
         run: bundle exec rake
