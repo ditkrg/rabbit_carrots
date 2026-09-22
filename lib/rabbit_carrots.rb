@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'bunny'
+require 'connection_pool'
+
 require_relative 'rabbit_carrots/version'
 require 'rabbit_carrots/errors'
 require 'rabbit_carrots/connection'
