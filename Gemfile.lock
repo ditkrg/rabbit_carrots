@@ -100,7 +100,11 @@ GEM
     uri (1.1.1)
 
 PLATFORMS
+  aarch64-linux-musl
   arm64-darwin-25
+  x86-linux-musl
+  x86_64-linux-gnu
+  x86_64-linux-musl
 
 DEPENDENCIES
   rabbit_carrots!
