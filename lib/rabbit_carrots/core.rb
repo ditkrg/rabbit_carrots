@@ -47,6 +47,7 @@ module RabbitCarrots
             routing_keys: channel[:routing_keys],
             queue_arguments: channel[:arguments],
             exchange_name: channel[:exchange_name],
+            passive_exchange: channel[:passive_exchange],
             kill_to_restart_on_standard_error:
           )
         end
@@ -87,10 +88,10 @@ module RabbitCarrots
       @healthy
     end
 
-    def run_task(queue_name:, handler_class:, routing_keys:, queue_arguments: {}, exchange_name: nil, kill_to_restart_on_standard_error: false)
+    def run_task(queue_name:, handler_class:, routing_keys:, queue_arguments: {}, exchange_name: nil, passive_exchange: false, kill_to_restart_on_standard_error: false) # rubocop:disable Metrics/ParameterLists
       channel = RabbitCarrots::Connection.instance.create_channel
       exchange_name ||= RabbitCarrots.configuration.rabbitmq_exchange_name
-      exchange = declare_exchange(channel, exchange_name)
+      exchange = declare_exchange(channel, exchange_name, passive: passive_exchange)
 
       logger.info "Listening on QUEUE: #{queue_name} for ROUTING KEYS: #{routing_keys}"
       queue = channel.queue(queue_name, durable: true, arguments: queue_arguments)
@@ -146,9 +147,20 @@ module RabbitCarrots
       RabbitCarrots::EventHandlers::Errors::PlaceholderError
     end
 
-    # Don't declare passively; Bunny topology recovery replays options, causing durable/exchange mismatch errors.
-    def declare_exchange(channel, exchange_name)
+    # A passive declaration only checks that an exchange owned by another
+    # service exists, so it needs no `configure` permission on it. Bunny >= 3.3
+    # leaves passive declarations out of topology recovery; older versions
+    # recorded them and replayed a durability mismatch on every reconnect.
+    def declare_exchange(channel, exchange_name, passive: false)
+      return channel.exchange(exchange_name, type: :topic, durable: exchange_durable?, passive: true) if passive
+
       channel.topic(exchange_name, durable: exchange_durable?)
+    rescue Bunny::NotFound => e
+      logger.error(
+        "Exchange '#{exchange_name}' does not exist. With `passive_exchange: true` it is not declared " \
+        "here and must be created by the service that owns it. Error: #{e.message}"
+      )
+      raise
     rescue Bunny::PreconditionFailed => e
       logger.error(
         "Exchange '#{exchange_name}' exists on the broker with a different durability than the one " \

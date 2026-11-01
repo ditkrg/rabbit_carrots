@@ -8,7 +8,7 @@ RSpec.describe RabbitCarrots::Core do
   let(:consumer) { instance_double(Bunny::Consumer, consumer_tag: 'tag-1') }
   let(:queue) { instance_double(Bunny::Queue, bind: true, subscribe: consumer) }
   let(:channel) do
-    instance_double(Bunny::Channel, topic: exchange, queue: queue, open?: true, consumers: { 'tag-1' => consumer })
+    instance_double(Bunny::Channel, topic: exchange, exchange: exchange, queue: queue, open?: true, consumers: { 'tag-1' => consumer })
   end
   let(:connection) { instance_double(RabbitCarrots::Connection, open?: true) }
 
@@ -52,11 +52,34 @@ RSpec.describe RabbitCarrots::Core do
       expect(channel).to have_received(:topic).with('myaccount', durable: true)
     end
 
-    it 'never declares the exchange passively' do
+    it 'does not declare the exchange passively by default' do
       run_task
 
+      expect(channel).not_to have_received(:exchange)
       expect(channel).not_to have_received(:topic).with(anything, hash_including(passive: true))
       expect(channel).not_to have_received(:topic).with(anything, hash_including(durable: false))
+    end
+
+    context 'with passive_exchange' do
+      it 'declares the exchange passively with the configured durability' do
+        run_task(exchange_name: 'other-exchange', passive_exchange: true)
+
+        expect(channel).to have_received(:exchange)
+          .with('other-exchange', type: :topic, durable: true, passive: true)
+        expect(channel).not_to have_received(:topic)
+        expect(queue).to have_received(:bind).with(exchange, routing_key: 'a.routing.key')
+      end
+
+      it 'explains a missing exchange and marks itself unhealthy' do
+        allow(channel).to receive(:exchange).and_raise(
+          Bunny::NotFound.new("NOT_FOUND - no exchange 'other-exchange'", channel, false)
+        )
+
+        run_task(exchange_name: 'other-exchange', passive_exchange: true)
+
+        expect(logger).to include('passive_exchange: true')
+        expect(core).not_to be_healthy
+      end
     end
 
     it 'honours a non-durable exchange when configured' do
