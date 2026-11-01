@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     rabbit_carrots (1.2.0)
-      bunny (>= 3.1)
+      bunny (>= 3.3)
       connection_pool (>= 2.4)
 
 GEM

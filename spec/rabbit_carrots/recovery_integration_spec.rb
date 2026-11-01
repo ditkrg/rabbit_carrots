@@ -122,6 +122,33 @@ RSpec.describe 'automatic recovery', :integration do
     expect(logger).not_to include('PRECONDITION_FAILED')
   end
 
+  context 'when the exchange is declared passively' do
+    before { RabbitCarrots.configuration.routing_key_mappings.first[:passive_exchange] = true }
+
+    it 'keeps consuming after the connection is severed and recovered' do
+      start_core!
+
+      publish('before')
+      expect(wait_until { RecordingHandler.payloads.include?('before') }).to be(true)
+
+      sever_connection!
+
+      publish('after')
+
+      expect(wait_until { RecordingHandler.payloads.include?('after') }).to be(true)
+      expect(core.send(:consumers_healthy?)).to be(true)
+      expect(logger).not_to include('PRECONDITION_FAILED')
+    end
+
+    it 'refuses to start when the exchange does not exist' do
+      RabbitCarrots.configuration.rabbitmq_exchange_name = "#{exchange_name}-missing"
+      @core_thread = Thread.new { @healthy = core.start }
+
+      expect(wait_until { @healthy == false }).to be(true)
+      expect(logger).to include('does not exist')
+    end
+  end
+
   context 'when the declared durability does not match the broker' do
     # The old behaviour: a passive declaration recorded `durable: false`
     # against a durable exchange.

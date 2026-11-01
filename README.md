@@ -44,7 +44,9 @@ RabbitCarrots.configure do |c|
   c.orm = :activerecord || :mongoid
   c.routing_key_mappings =  [
     { routing_keys: ['RK1', 'RK2'], queue: 'QUEUE_NAME', handler: 'CLASS HANDLER IN STRING' },
-    { routing_keys: ['RK1', 'RK2'], queue: 'QUEUE_NAME', handler: 'CLASS HANDLER IN STRING' }
+    { routing_keys: ['RK1', 'RK2'], queue: 'QUEUE_NAME', handler: 'CLASS HANDLER IN STRING' },
+    { routing_keys: ['RK1'], queue: 'QUEUE_NAME', handler: 'CLASS HANDLER IN STRING',
+      exchange_name: 'ANOTHER_SERVICES_EXCHANGE', passive_exchange: true }
   ]
 end
 
@@ -83,6 +85,17 @@ takes every consumer on it with it. The process stays up and stops consuming.
 
 If the durability is wrong, the service now says so and refuses to start rather
 than consuming from a channel that will not survive its first reconnect.
+
+### Consuming from an exchange you don't own
+
+By default each exchange is declared, which needs `configure` permission on it.
+To bind to an exchange another service owns without that permission, set
+`passive_exchange: true` on the mapping. The exchange is then only checked for
+existence; the user needs `read` on it to bind, and nothing else.
+
+If the exchange does not exist, the consumer fails to start and says so. Passive
+declarations are left out of Bunny's topology recovery (Bunny >= 3.3), so a
+reconnect does not try to declare the exchange either.
 
 ### Health and restarts
 

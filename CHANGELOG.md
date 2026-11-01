@@ -1,5 +1,16 @@
 ## [Unreleased]
 
+### Added
+
+- `passive_exchange: true` on a routing key mapping binds to an existing
+  exchange without declaring it, so the user needs no `configure` permission on
+  an exchange owned by another service.
+
+### Changed
+
+- Requires `bunny >= 3.3`, the first version that leaves passive declarations
+  out of topology recovery.
+
 ## [1.2.0] - 2026-09-22
 
 ### Fixed
